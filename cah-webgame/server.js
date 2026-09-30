@@ -1,7 +1,40 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const cardsData = require('./cards.json');
+const fs = require('fs');
+const path = require('path');
+
+// Lade das Hauptdeck
+const baseCardsData = require('./cards.json');
+
+let hasExtensions = false;
+let combinedCardsData = { blackCards: [...baseCardsData.blackCards], whiteCards: [...baseCardsData.whiteCards] };
+
+// Fehlertolerante Suche nach der Erweiterung (Tippfehler & Groß-/Kleinschreibung)
+const possibleFiles = [
+    'cards_extensions.json', 'cards_extentions.json', 'cards_extenions.json',
+    'Cards_extensions.json', 'cards_extensions.json'
+];
+
+for (let file of possibleFiles) {
+    const extPath = path.join(__dirname, file);
+    if (fs.existsSync(extPath)) {
+        try {
+            const extData = require(extPath);
+            if (extData.blackCards) combinedCardsData.blackCards.push(...extData.blackCards);
+            if (extData.whiteCards) combinedCardsData.whiteCards.push(...extData.whiteCards);
+            hasExtensions = true;
+            console.log(`Erweiterungspaket '${file}' erfolgreich gefunden und gemischt!`);
+            break; // Stoppt die Suche, wenn eins gefunden wurde
+        } catch (e) {
+            console.error(`Fehler beim Laden von ${file}:`, e);
+        }
+    }
+}
+
+if (!hasExtensions) {
+    console.log("Hinweis: Keine Erweiterungsdatei gefunden. Nutze nur Standard-Karten.");
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -21,10 +54,10 @@ function initLobby(hostId, mode) {
     return {
         hostId: hostId,
         mode: mode,
-        settings: { useTimer: true, timeLimit: 60, scoreLimit: 10 },
+        settings: { useTimer: true, timeLimit: 60, judgingTimeLimit: 30, scoreLimit: 10 },
         players: [],
-        whiteDeck: [...cardsData.whiteCards].sort(() => Math.random() - 0.5),
-        blackDeck: [...cardsData.blackCards].sort(() => Math.random() - 0.5),
+        whiteDeck: [...combinedCardsData.whiteCards].sort(() => Math.random() - 0.5),
+        blackDeck: [...combinedCardsData.blackCards].sort(() => Math.random() - 0.5),
         currentCzarIndex: -1,
         currentBlackCard: null,
         submittedCards: [],
@@ -36,7 +69,7 @@ function initLobby(hostId, mode) {
 
 function drawWhiteCards(lobby, count) {
     if (lobby.whiteDeck.length < count) {
-        lobby.whiteDeck = [...cardsData.whiteCards].sort(() => Math.random() - 0.5);
+        lobby.whiteDeck = [...combinedCardsData.whiteCards].sort(() => Math.random() - 0.5);
     }
     return lobby.whiteDeck.splice(0, count);
 }
@@ -58,7 +91,7 @@ function startCzarPickingPhase(roomCode) {
 
     const options = [];
     for(let i=0; i<3; i++) {
-        if(lobby.blackDeck.length === 0) lobby.blackDeck = [...cardsData.blackCards].sort(() => Math.random() - 0.5);
+        if(lobby.blackDeck.length === 0) lobby.blackDeck = [...combinedCardsData.blackCards].sort(() => Math.random() - 0.5);
         options.push(lobby.blackDeck.pop());
     }
 
@@ -83,7 +116,7 @@ function startPlayingPhase(lobby, roomCode, czarId) {
     lobby.votes = [];
 
     if (!lobby.currentBlackCard || lobby.mode === 'vote') {
-        if(lobby.blackDeck.length === 0) lobby.blackDeck = [...cardsData.blackCards].sort(() => Math.random() - 0.5);
+        if(lobby.blackDeck.length === 0) lobby.blackDeck = [...combinedCardsData.blackCards].sort(() => Math.random() - 0.5);
         lobby.currentBlackCard = lobby.blackDeck.pop();
     }
 
@@ -124,7 +157,7 @@ function triggerJudgingPhase(lobby, roomCode) {
     lobby.gameState = 'judging';
     lobby.submittedCards.sort(() => Math.random() - 0.5);
 
-    const judgingDuration = Math.max(15000, (lobby.settings.timeLimit * 1000) / 2); // Halbe Lege-Zeit, min 15s
+    const judgingDuration = lobby.settings.judgingTimeLimit * 1000;
     const endTime = lobby.settings.useTimer ? Date.now() + judgingDuration : null;
 
     io.to(roomCode).emit('allCardsSubmitted', { submissions: lobby.submittedCards, endTime: endTime });
@@ -176,7 +209,6 @@ function finalizeRound(lobby, roomCode, winnerIds) {
     io.to(roomCode).emit('roundWinner', { winnerIds: winnerIds, endTime: endTime });
     io.to(roomCode).emit('lobbyUpdate', lobby.players);
 
-    // Sieg-Bedingung prüfen
     const isGameOver = lobby.players.some(p => p.score >= lobby.settings.scoreLimit);
     if (isGameOver) {
         const overallWinner = lobby.players.reduce((prev, current) => (prev.score > current.score) ? prev : current);
@@ -227,7 +259,14 @@ io.on('connection', (socket) => {
         };
         lobby.players.push(newPlayer);
 
-        socket.emit('lobbyJoined', { roomCode, player: newPlayer, isHost, mode: lobby.mode, settings: lobby.settings });
+        socket.emit('lobbyJoined', {
+            roomCode,
+            player: newPlayer,
+            isHost,
+            mode: lobby.mode,
+            settings: lobby.settings,
+            hasExtensions
+        });
         io.to(roomCode).emit('lobbyUpdate', lobby.players);
     }
 
@@ -300,8 +339,14 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         if (!currentRoom || !lobbies[currentRoom]) return;
         const lobby = lobbies[currentRoom];
+
+        const leavingPlayer = lobby.players.find(p => p.id === socket.id);
         lobby.players = lobby.players.filter(p => p.id !== socket.id);
         io.to(currentRoom).emit('lobbyUpdate', lobby.players);
+
+        if (leavingPlayer && lobby.gameState !== 'lobby') {
+            io.to(currentRoom).emit('playerLeft', leavingPlayer.name);
+        }
 
         if (lobby.players.length === 0) {
             clearTimeout(lobby.timer);
@@ -312,5 +357,5 @@ io.on('connection', (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => { console.log(`Server läuft auf Port ${PORT}`); });

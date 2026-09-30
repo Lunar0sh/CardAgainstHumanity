@@ -1,7 +1,3 @@
-/* ==========================================================================
-   CARDS AGAINST HUMANITY - FULL STYLESHEET
-   ========================================================================== */
-
 :root {
     --bg-dark: #0a0a0c;
     --bg-panel: #16161a;
@@ -34,39 +30,41 @@ body {
 }
 
 #app {
-    max-width: 1300px; /* Leicht vergrößert für das breitere Sidebar-Layout */
+    max-width: 1300px;
     width: 100%;
     position: relative;
 }
 
-.hidden {
-    display: none !important;
-    opacity: 0;
-    pointer-events: none;
+.hidden { display: none !important; opacity: 0; pointer-events: none; }
+
+/* TOAST BENACHRICHTIGUNGEN */
+#toast-container {
+    position: fixed; top: 20px; right: 20px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 10px;
 }
 
-/* ==========================================================================
-   TYPOGRAFIE & LISTEN
-   ========================================================================== */
+.toast {
+    background: var(--bg-panel); color: #fff; padding: 12px 20px;
+    border-radius: 8px; border-left: 4px solid var(--danger);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    animation: slideInRight 0.3s forwards, fadeOut 0.5s forwards 3.5s;
+    font-size: 1rem;
+}
 
+@keyframes fadeOut { to { opacity: 0; transform: translateX(50px); } }
+
+/* TYPOGRAFIE & LISTEN */
 h1, h2, h3, h4 { color: #fff; margin-top: 0; }
 .highlight { color: var(--accent); font-size: 1.5rem; letter-spacing: 2px; }
 hr { border: 0; border-top: 1px solid rgba(255, 255, 255, 0.05); margin: 25px 0; }
 
 .filled-blank {
-    color: var(--accent);
-    text-decoration: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 4px;
-    font-style: italic;
-    display: inline-block;
+    color: var(--accent); text-decoration: underline; text-decoration-thickness: 2px;
+    text-underline-offset: 4px; font-style: italic; display: inline-block;
     animation: textPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-/* ==========================================================================
-   BUTTONS & INPUTS
-   ========================================================================== */
-
+/* BUTTONS & INPUTS */
 input[type="text"], input[type="number"], select {
     width: 100%; padding: 15px; margin-bottom: 15px;
     background: #0f0f13; color: #fff; border: 1px solid #333;
@@ -87,8 +85,7 @@ button {
 }
 
 button:hover:not(:disabled) {
-    background-color: var(--accent-hover);
-    transform: translateY(-3px);
+    background-color: var(--accent-hover); transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(187, 134, 252, 0.5);
 }
 
@@ -101,10 +98,7 @@ button:disabled { background-color: #333; color: #666; cursor: not-allowed; opac
 
 .error { color: var(--danger); font-weight: bold; margin-top: 10px; animation: shake 0.4s ease; }
 
-/* ==========================================================================
-   MODALS (REGELN & GAME OVER)
-   ========================================================================== */
-
+/* MODALS */
 .floating-btn {
     position: fixed; bottom: 30px; right: 30px; width: auto;
     padding: 12px 20px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.8);
@@ -141,36 +135,19 @@ button:disabled { background-color: #333; color: #666; cursor: not-allowed; opac
 .rules-section h3 { margin-bottom: 10px; color: var(--accent); }
 .rules-section p { margin: 0; line-height: 1.5; font-size: 1.05rem; }
 
-/* NEU: Game Over Modal Styling */
 .game-over-content {
-    text-align: center;
-    background: linear-gradient(145deg, #16161a, #1f1f25);
-    border: 2px solid var(--accent);
-    box-shadow: 0 0 50px rgba(187, 134, 252, 0.4);
+    text-align: center; background: linear-gradient(145deg, #16161a, #1f1f25);
+    border: 2px solid var(--accent); box-shadow: 0 0 50px rgba(187, 134, 252, 0.4);
     padding: 50px 40px;
 }
 #game-over-title {
-    font-size: 2.5rem;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    margin-bottom: 15px;
+    font-size: 2.5rem; color: var(--accent); text-transform: uppercase;
+    letter-spacing: 3px; margin-bottom: 15px;
 }
-#game-over-message {
-    font-size: 1.5rem;
-    color: #fff;
-    margin-bottom: 40px;
-}
-.trophy-icon {
-    font-size: 5rem;
-    margin-bottom: 20px;
-    animation: pulseGlow 2s infinite;
-}
+#game-over-message { font-size: 1.5rem; color: #fff; margin-bottom: 40px; }
+.trophy-icon { font-size: 5rem; margin-bottom: 20px; animation: pulseGlow 2s infinite; }
 
-/* ==========================================================================
-   MENÜS & EINSTELLUNGEN
-   ========================================================================== */
-
+/* MENÜS & EINSTELLUNGEN */
 #lobby-menu, #waiting-room {
     text-align: center; margin-top: 8vh;
     animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
@@ -184,18 +161,50 @@ button:disabled { background-color: #333; color: #666; cursor: not-allowed; opac
 }
 
 .settings-panel {
-    background: rgba(0, 0, 0, 0.3); padding: 15px 20px; border-radius: 10px;
+    background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 12px;
     margin: 20px 0; text-align: left; border: 1px solid #333;
 }
-.settings-panel h4 { margin: 0 0 15px 0; color: var(--accent); }
-.setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 1rem; }
-.setting-row input[type="number"] { width: 70px; padding: 5px 10px; margin: 0; }
+.settings-panel h4 { margin: 0 0 20px 0; color: #fff; font-size: 1.1rem; }
+.setting-group { margin-bottom: 15px; }
+.setting-group:last-child { margin-bottom: 0; }
+
+.setting-header {
+    display: flex !important; justify-content: space-between !important; align-items: center;
+    width: 100%; font-size: 0.95rem; margin-bottom: 8px; color: #ccc;
+}
+.setting-value { font-weight: bold; color: var(--accent); }
+.toggle-row { display: flex; justify-content: space-between; align-items: center; font-size: 1rem; color: #ccc; cursor: pointer; margin-bottom: 10px; }
+.toggle-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
+
+/* Custom Range Slider */
+input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 10px 0; }
+input[type=range]:focus { outline: none; }
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%; height: 8px; cursor: pointer; background: rgba(255, 255, 255, 0.1); border-radius: 4px;
+}
+input[type=range]::-moz-range-track {
+    width: 100%; height: 8px; cursor: pointer; background: rgba(255, 255, 255, 0.1); border-radius: 4px;
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
+    background: var(--accent); cursor: pointer; margin-top: -8px; border: 2px solid #fff;
+    box-shadow: 0 0 10px rgba(187, 134, 252, 0.5); transition: transform 0.1s;
+}
+input[type=range]::-moz-range-thumb {
+    height: 24px; width: 24px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid #fff;
+    box-shadow: 0 0 10px rgba(187, 134, 252, 0.5);
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); }
+
+.badge {
+    background: #333; color: #aaa; padding: 4px 10px;
+    border-radius: 20px; font-size: 0.8rem; font-weight: bold;
+}
+.badge.active { background: var(--accent); color: #000; box-shadow: 0 0 10px rgba(187, 134, 252, 0.4); }
+
 #lobby-settings-info { font-size: 0.95rem; color: #aaa; margin: 15px 0; padding: 10px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; }
 
-/* ==========================================================================
-   LISTEN (LOBBY & LEADERBOARD)
-   ========================================================================== */
-
+/* LISTEN (LOBBY & LEADERBOARD) */
 #player-list, #game-leaderboard { list-style: none; padding: 0; margin: 0; font-size: 1.1rem; }
 #player-list li {
     margin: 10px 0; padding: 12px; background: rgba(255, 255, 255, 0.03);
@@ -208,10 +217,7 @@ button:disabled { background-color: #333; color: #666; cursor: not-allowed; opac
     border-radius: 8px; border-left: 4px solid var(--accent);
 }
 
-/* ==========================================================================
-   HEADER & TIMER IM SPIEL
-   ========================================================================== */
-
+/* HEADER & TIMER IM SPIEL */
 header {
     display: flex; justify-content: space-between; align-items: center;
     background: var(--bg-panel); padding: 15px 25px; border-radius: 12px;
@@ -234,68 +240,38 @@ header {
     font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
 }
 
-/* ==========================================================================
-   SPIELFELD LAYOUT (SEITEN-SCOREBOARD)
-   ========================================================================== */
+/* SPIELFELD LAYOUT */
+.game-layout { display: flex; align-items: flex-start; gap: 30px; }
+#leaderboard-panel { flex: 0 0 250px; padding: 25px; margin: 0; position: sticky; top: 20px; }
+.game-main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 30px; }
 
-.game-layout {
-    display: flex;
-    align-items: flex-start;
-    gap: 30px;
-}
-
-/* NEU: Das Scoreboard ist nun links fest verankert */
-#leaderboard-panel {
-    flex: 0 0 250px;
-    padding: 25px;
-    margin: 0;
-    position: sticky;
-    top: 20px;
-}
-
-/* NEU: Tisch und Handkarten sind rechts untereinander */
-.game-main-content {
-    flex: 1;
-    min-width: 0; /* Verhindert Flex-Blowout */
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-}
-
+/* FIX: Überlappungs-Korrektur */
 #table-area, #czar-selection {
     background: rgba(22, 22, 26, 0.8); backdrop-filter: blur(8px); padding: 40px 20px;
     border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.05);
     min-height: 250px; box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
-    display: flex; flex-direction: column; align-items: center; gap: 40px;
+    display: flex; flex-direction: column; align-items: center; gap: 80px; /* Erhöhter Abstand für Pop-Up-Animation */
 }
 
-#black-card-wrapper { display: flex; justify-content: center; width: 100%; }
+#black-card-wrapper { display: flex; justify-content: center; width: 100%; z-index: 10; }
 .card-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%; }
 
-/* ==========================================================================
-   HANDKARTEN BEREICH
-   ========================================================================== */
-
+/* HANDKARTEN BEREICH */
 #hand-wrapper {
     width: 100%; overflow-x: auto; padding: 20px 10px 40px 10px;
     scrollbar-width: thin; scrollbar-color: var(--accent) #1a1a1a;
     scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
 }
-
 #hand-wrapper::-webkit-scrollbar { height: 10px; }
 #hand-wrapper::-webkit-scrollbar-track { background: #1a1a1a; border-radius: 5px; }
 #hand-wrapper::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 5px; border: 2px solid #1a1a1a; }
-
 #hand { display: flex; gap: 15px; width: max-content; perspective: 1000px; }
 
 #czar-selection button, #table-area button, #player-area button {
     margin-top: 25px; max-width: 300px; margin-left: auto; margin-right: auto; display: block;
 }
 
-/* ==========================================================================
-   KARTEN DESIGN (SCHWARZ & WEISS)
-   ========================================================================== */
-
+/* KARTEN DESIGN (SCHWARZ & WEISS) */
 .card {
     width: 220px; height: 310px; padding: 25px; border-radius: 14px;
     font-weight: bold; font-size: 1.1rem; line-height: 1.35; box-sizing: border-box;
@@ -303,6 +279,7 @@ header {
     background-size: 60%; background-repeat: no-repeat; background-position: right -20px bottom -20px;
     opacity: 0; transform-origin: bottom center;
     overflow-y: auto; overflow-x: hidden; scrollbar-width: none; -ms-overflow-style: none;
+    touch-action: pan-x;
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
 }
 .card::-webkit-scrollbar { display: none; }
@@ -316,42 +293,50 @@ header {
     background-color: var(--card-black); color: #fff; border: 1px solid #333;
     background-image: url("data:image/svg+xml,%3Csvg fill='%231f1f23' width='800px' height='800px' viewBox='0 0 256 256' id='Flat' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M212,84a24,24,0,1,0,24,24A24.0275,24.0275,0,0,0,212,84Zm0,40a16,16,0,1,1,16-16A16.01833,16.01833,0,0,1,212,124ZM68,108a24,24,0,1,0-24,24A24.0275,24.0275,0,0,0,68,108ZM44,124a16,16,0,1,1,16-16A16.01833,16.01833,0,0,1,44,124ZM92,84A24,24,0,1,0,68,60,24.0275,24.0275,0,0,0,92,84Zm0-40A16,16,0,1,1,76,60,16.01833,16.01833,0,0,1,92,44Zm72,40a24,24,0,1,0-24-24A24.0275,24.0275,0,0,0,164,84Zm0-40a16,16,0,1,1-16,16A16.01833,16.01833,0,0,1,164,44Zm21.16016,108.34717a39.30645,39.30645,0,0,1-18.751-23.51123,39.99886,39.99886,0,0,0-76.81836-.00293,39.27961,39.27961,0,0,1-18.7334,23.50439,36.00712,36.00712,0,0,0,31.14746,64.83448,68.09023,68.09023,0,0,1,51.94532-.01856,36.00666,36.00666,0,0,0,31.21-64.80615ZM168,212a27.89064,27.89064,0,0,1-10.96973-2.22949,76.0984,76.0984,0,0,0-58.10547.01855A28.007,28.007,0,0,1,74.707,159.3501a47.26156,47.26156,0,0,0,22.56738-28.28467,31.99869,31.99869,0,0,1,61.45313.001A47.25311,47.25311,0,0,0,181.293,159.3501l.03515.01953A28.00374,28.00374,0,0,1,168,212Z'/%3E%3C/svg%3E");
 }
+
+/* FIX: Zwingt Dark-Mode Erweiterungen, weiße Karten weiß zu lassen */
 .card.white {
-    background-color: var(--card-white); color: #111;
+    background-color: #f5f5f5 !important; color: #111 !important;
     background-image: url("data:image/svg+xml,%3Csvg fill='%23e0e0e0' width='800px' height='800px' viewBox='0 0 256 256' id='Flat' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M212,84a24,24,0,1,0,24,24A24.0275,24.0275,0,0,0,212,84Zm0,40a16,16,0,1,1,16-16A16.01833,16.01833,0,0,1,212,124ZM68,108a24,24,0,1,0-24,24A24.0275,24.0275,0,0,0,68,108ZM44,124a16,16,0,1,1,16-16A16.01833,16.01833,0,0,1,44,124ZM92,84A24,24,0,1,0,68,60,24.0275,24.0275,0,0,0,92,84Zm0-40A16,16,0,1,1,76,60,16.01833,16.01833,0,0,1,92,44Zm72,40a24,24,0,1,0-24-24A24.0275,24.0275,0,0,0,164,84Zm0-40a16,16,0,1,1-16,16A16.01833,16.01833,0,0,1,164,44Zm21.16016,108.34717a39.30645,39.30645,0,0,1-18.751-23.51123,39.99886,39.99886,0,0,0-76.81836-.00293,39.27961,39.27961,0,0,1-18.7334,23.50439,36.00712,36.00712,0,0,0,31.14746,64.83448,68.09023,68.09023,0,0,1,51.94532-.01856,36.00666,36.00666,0,0,0,31.21-64.80615ZM168,212a27.89064,27.89064,0,0,1-10.96973-2.22949,76.0984,76.0984,0,0,0-58.10547.01855A28.007,28.007,0,0,1,74.707,159.3501a47.26156,47.26156,0,0,0,22.56738-28.28467,31.99869,31.99869,0,0,1,61.45313.001A47.25311,47.25311,0,0,0,181.293,159.3501l.03515.01953A28.00374,28.00374,0,0,1,168,212Z'/%3E%3C/svg%3E");
 }
 
 .card.selected { border: 3px solid var(--accent); transform: translateY(-25px) scale(1.08) !important; z-index: 10; animation: pulseGlow 2s infinite, dealCard 0.4s ease forwards !important; }
 .card.grayed-out { opacity: 0.3 !important; filter: grayscale(100%) blur(1px); pointer-events: none; transform: scale(0.95); }
 
-/* ==========================================================================
-   MOBILE RESPONSIVENESS
-   ========================================================================== */
+/* FIX: Saubere Trennlinien für "Pick 2" Karten */
+.pick-text { padding: 5px 0; }
+.pick-divider {
+    height: 1px;
+    background: repeating-linear-gradient(to right, #ccc, #ccc 5px, transparent 5px, transparent 10px);
+    margin: 10px 0;
+}
+.my-card-label {
+    margin-top: 15px; font-size: 0.9rem; color: var(--accent);
+    text-align: center; font-weight: bold;
+}
 
+/* MOBILE RESPONSIVENESS */
 @media (max-width: 900px) {
     body { padding: 10px; }
     header { flex-direction: column; gap: 15px; text-align: center; padding: 15px; }
     .header-left, .header-right { width: 100%; justify-content: center; flex-wrap: wrap; }
 
-    /* Layout auf Handys umbrechen */
     .game-layout { flex-direction: column; }
     #leaderboard-panel { width: 100%; flex: none; position: static; box-sizing: border-box; padding: 15px; margin-bottom: 10px; }
 
     #table-area, #czar-selection { padding: 20px 15px; min-height: 200px; gap: 20px; }
-    .card { width: 150px; height: 210px; font-size: 0.9rem; padding: 15px; }
+    .card { width: 150px; height: 210px; font-size: 0.95rem; padding: 15px; }
     .card.selected { transform: translateY(-15px) scale(1.05) !important; }
 
-    #hand-wrapper { padding: 10px 5px 20px 5px; }
+    #hand-wrapper { padding: 10px 5px 20px 5px; -webkit-overflow-scrolling: touch; }
     #hand { gap: 10px; }
+
     button { padding: 12px; font-size: 1rem; max-width: 100% !important; }
     .btn-small { max-width: max-content !important; }
-    .floating-btn { bottom: 15px; right: 15px; padding: 10px 15px; font-size: 0.9rem; }
+    .floating-btn { bottom: auto; top: 15px; right: 15px; padding: 8px 12px; font-size: 0.8rem; z-index: 3000; }
 }
 
-/* ==========================================================================
-   KEYFRAME ANIMATIONEN
-   ========================================================================== */
-
+/* KEYFRAME ANIMATIONEN */
 @keyframes popIn { 0% { opacity: 0; transform: scale(0.9) translateY(30px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
 @keyframes slideDown { 0% { opacity: 0; transform: translateY(-30px); } 100% { opacity: 1; transform: translateY(0); } }
 @keyframes slideInRight { 0% { opacity: 0; transform: translateX(-20px); } 100% { opacity: 1; transform: translateX(0); } }

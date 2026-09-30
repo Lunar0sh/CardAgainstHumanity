@@ -4,17 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CAH Webgame</title>
-    <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🃏</text></svg>">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="app">
 
-    <!-- Schwebender Button für die Regeln -->
-    <button id="open-rules-btn" class="floating-btn" title="Spielregeln">📖 Regeln</button>
+    <div id="toast-container"></div>
+    <button type="button" id="open-rules-btn" class="floating-btn" title="Spielregeln">📖 Regeln</button>
 
-    <!-- Das Regelwerk Modal -->
+    <!-- Regelwerk Modal -->
     <div id="rules-modal" class="modal hidden">
         <div class="modal-content">
             <span class="close-btn" id="close-rules-btn">&times;</span>
@@ -38,13 +37,13 @@
         </div>
     </div>
 
-    <!-- NEU: Game Over Modal -->
+    <!-- Game Over Modal -->
     <div id="game-over-modal" class="modal hidden">
         <div class="modal-content game-over-content">
             <div class="trophy-icon">🏆</div>
             <h2 id="game-over-title">SPIEL BEENDET</h2>
             <p id="game-over-message">Der Sieger steht fest!</p>
-            <button id="back-to-lobby-btn">Zurück zum Hauptmenü</button>
+            <button type="button" id="back-to-lobby-btn">Zurück zum Hauptmenü</button>
         </div>
     </div>
 
@@ -58,12 +57,12 @@
                 <option value="vote">Demokratie (Automatisch & Abstimmen)</option>
             </select>
             <div class="actions">
-                <button id="create-lobby-btn">Lobby erstellen</button>
+                <button type="button" id="create-lobby-btn">Lobby erstellen</button>
             </div>
             <hr>
             <div class="actions">
                 <input type="text" id="room-code-input" placeholder="Lobby-Code">
-                <button id="join-lobby-btn">Lobby beitreten</button>
+                <button type="button" id="join-lobby-btn">Lobby beitreten</button>
             </div>
             <p id="error-message" class="error"></p>
         </div>
@@ -75,28 +74,58 @@
             <h2>Raum: <span id="waiting-room-code" class="highlight"></span></h2>
             <h3 id="mode-display"></h3>
 
-            <!-- Einstellungen für den Host -->
             <div id="host-settings" class="hidden settings-panel">
-                <h4>Spieleinstellungen</h4>
-                <label class="setting-row">
-                    <input type="checkbox" id="setting-timer" checked> Timer aktivieren
-                </label>
-                <label class="setting-row">
-                    Rundenzeit (Sek):
-                    <input type="number" id="setting-time" value="60" min="15" max="120">
-                </label>
-                <label class="setting-row">
-                    Punkte bis zum Sieg:
-                    <input type="number" id="setting-score" value="10" min="1" max="50">
-                </label>
+                <h4>⚙️ Spieleinstellungen</h4>
+
+                <div class="setting-group">
+                    <label class="setting-row toggle-row">
+                        <span>Timer aktivieren</span>
+                        <input type="checkbox" id="setting-timer" checked onchange="document.getElementById('timer-settings-wrapper').style.opacity = this.checked ? '1' : '0.4'; document.getElementById('timer-settings-wrapper').style.pointerEvents = this.checked ? 'auto' : 'none';">
+                    </label>
+                </div>
+
+                <div id="timer-settings-wrapper">
+                    <div class="setting-group">
+                        <div class="setting-header">
+                            <span>Zeit zum Legen</span>
+                            <span id="val-time" class="setting-value">60s</span>
+                        </div>
+                        <!-- FIX: Inline oninput für Echtzeit-Update der Zahlen -->
+                        <input type="range" id="setting-time" min="15" max="180" step="5" value="60" oninput="document.getElementById('val-time').innerText = this.value + 's'">
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="setting-header">
+                            <span>Zeit zum Abstimmen</span>
+                            <span id="val-judging" class="setting-value">30s</span>
+                        </div>
+                        <input type="range" id="setting-judging" min="15" max="120" step="5" value="30" oninput="document.getElementById('val-judging').innerText = this.value + 's'">
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <div class="setting-header">
+                        <span>Punkte bis zum Sieg</span>
+                        <span id="val-score" class="setting-value">10 Pkt</span>
+                    </div>
+                    <input type="range" id="setting-score" min="3" max="50" step="1" value="10" oninput="document.getElementById('val-score').innerText = this.value + ' Pkt'">
+                </div>
+
+                <div class="setting-group" style="margin-top: 25px;">
+                    <div class="setting-header extension-header">
+                        <span>Erweiterungen</span>
+                        <span id="extensions-status" class="badge">Prüfe...</span>
+                    </div>
+                </div>
             </div>
+
             <div id="lobby-settings-info">
-                Timer: <strong id="info-timer">An (60s)</strong> | Ziel: <strong id="info-score">10</strong> Pkt
+                Timer: <strong id="info-timer">An (60s / 30s)</strong> | Ziel: <strong id="info-score">10</strong> Pkt
             </div>
 
             <h3>Spieler in der Lobby:</h3>
             <ul id="player-list"></ul>
-            <button id="start-game-btn" class="hidden">Spiel starten</button>
+            <button type="button" id="start-game-btn" class="hidden">Spiel starten</button>
             <p id="waiting-text">Warte auf Host (Mindestens 3 aktive Spieler)...</p>
         </div>
     </div>
@@ -105,8 +134,8 @@
     <div id="game-ui" class="hidden">
         <header>
             <div class="header-left">
-                <button id="leave-game-btn" class="btn-danger btn-small">Verlassen</button>
-                <button id="end-game-btn" class="btn-danger btn-small hidden">Spiel beenden</button>
+                <button type="button" id="leave-game-btn" class="btn-danger btn-small">Verlassen</button>
+                <button type="button" id="end-game-btn" class="btn-danger btn-small hidden">Spiel beenden</button>
             </div>
             <div class="lobby-info">
                 Raum: <strong id="display-room-code">---</strong> |
@@ -121,20 +150,17 @@
             </div>
         </header>
 
-        <!-- NEU: Angepasstes Layout (Sidebar links, Rest rechts) -->
         <main class="game-layout">
-            <!-- Leaderboard Sidebar (Feste Spalte links) -->
             <aside id="leaderboard-panel" class="menu-box">
                 <h3>🏆 Rangliste</h3>
                 <ul id="game-leaderboard"></ul>
             </aside>
 
-            <!-- Hauptbereich (Tisch & Handkarten untereinander) -->
             <div class="game-main-content">
                 <div id="czar-selection" class="hidden">
                     <h2>Wähle deine schwarze Karte:</h2>
                     <div id="black-card-options" class="card-container"></div>
-                    <button id="confirm-black-card-btn" disabled>Karte bestätigen</button>
+                    <button type="button" id="confirm-black-card-btn" disabled>Karte bestätigen</button>
                 </div>
 
                 <div id="table-area">
@@ -142,7 +168,7 @@
                         <div id="black-card" class="card black hidden"></div>
                     </div>
                     <div id="submitted-area" class="card-container"></div>
-                    <button id="confirm-winner-btn" class="hidden">Auswahl bestätigen</button>
+                    <button type="button" id="confirm-winner-btn" class="hidden">Auswahl bestätigen</button>
                 </div>
 
                 <div id="player-area">
@@ -150,7 +176,7 @@
                     <div id="hand-wrapper">
                         <div id="hand"></div>
                     </div>
-                    <button id="submit-btn" disabled>Karte legen</button>
+                    <button type="button" id="submit-btn" disabled>Karte legen</button>
                 </div>
             </div>
         </main>

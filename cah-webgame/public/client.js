@@ -26,9 +26,16 @@ const playerArea = document.getElementById('player-area');
 const hostSettings = document.getElementById('host-settings');
 const settingTimer = document.getElementById('setting-timer');
 const settingTime = document.getElementById('setting-time');
+const settingJudging = document.getElementById('setting-judging');
 const settingScore = document.getElementById('setting-score');
+
+const valTime = document.getElementById('val-time');
+const valJudging = document.getElementById('val-judging');
+const valScore = document.getElementById('val-score');
 const infoTimer = document.getElementById('info-timer');
 const infoScore = document.getElementById('info-score');
+const extensionsStatus = document.getElementById('extensions-status');
+
 const leaveGameBtn = document.getElementById('leave-game-btn');
 const endGameBtn = document.getElementById('end-game-btn');
 
@@ -45,6 +52,8 @@ const gameOverModal = document.getElementById('game-over-modal');
 const gameOverTitle = document.getElementById('game-over-title');
 const gameOverMessage = document.getElementById('game-over-message');
 const backToLobbyBtn = document.getElementById('back-to-lobby-btn');
+
+const toastContainer = document.getElementById('toast-container');
 
 // State
 let myId = null;
@@ -63,7 +72,25 @@ let currentSubmittedCards = [];
 let timerInterval = null;
 
 // ==========================================
-// MODAL LOGIK (Regeln & Game Over)
+// TOAST BENACHRICHTIGUNGEN
+// ==========================================
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerText = message;
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        if(toast.parentElement) toast.remove();
+    }, 4000);
+}
+
+socket.on('playerLeft', (playerName) => {
+    showToast(`🚪 ${playerName} hat das Spiel verlassen.`);
+});
+
+// ==========================================
+// MODAL LOGIK
 // ==========================================
 openRulesBtn.onclick = () => rulesModal.classList.remove('hidden');
 closeRulesBtn.onclick = () => rulesModal.classList.add('hidden');
@@ -74,28 +101,43 @@ window.onclick = (event) => {
 };
 
 // ==========================================
-// SETTINGS & LOBBY LOGIK
+// SETTINGS SLIDER & LOBBY LOGIK
 // ==========================================
+
 function sendSettings() {
     if(!isHost) return;
     socket.emit('updateSettings', {
         roomCode,
         settings: {
             useTimer: settingTimer.checked,
-            timeLimit: parseInt(settingTime.value) || 60,
-            scoreLimit: parseInt(settingScore.value) || 10
+            timeLimit: parseInt(settingTime.value),
+            judgingTimeLimit: parseInt(settingJudging.value),
+            scoreLimit: parseInt(settingScore.value)
         }
     });
 }
 settingTimer.addEventListener('change', sendSettings);
 settingTime.addEventListener('change', sendSettings);
+settingJudging.addEventListener('change', sendSettings);
 settingScore.addEventListener('change', sendSettings);
 
 socket.on('settingsUpdated', (settings) => {
     settingTimer.checked = settings.useTimer;
     settingTime.value = settings.timeLimit;
+    settingJudging.value = settings.judgingTimeLimit;
     settingScore.value = settings.scoreLimit;
-    infoTimer.innerText = settings.useTimer ? `An (${settings.timeLimit}s)` : "Aus";
+
+    if (valTime) valTime.innerText = settings.timeLimit + 's';
+    if (valJudging) valJudging.innerText = settings.judgingTimeLimit + 's';
+    if (valScore) valScore.innerText = settings.scoreLimit + ' Pkt';
+
+    const timerSettingsWrapper = document.getElementById('timer-settings-wrapper');
+    if (timerSettingsWrapper) {
+        timerSettingsWrapper.style.opacity = settings.useTimer ? '1' : '0.4';
+        timerSettingsWrapper.style.pointerEvents = settings.useTimer ? 'auto' : 'none';
+    }
+
+    infoTimer.innerText = settings.useTimer ? `An (${settings.timeLimit}s / ${settings.judgingTimeLimit}s)` : "Aus";
     infoScore.innerText = settings.scoreLimit;
 });
 
@@ -106,7 +148,6 @@ endGameBtn.onclick = () => {
     }
 };
 
-// Das neue Game Over Overlay
 socket.on('gameOver', (data) => {
     if (data.aborted) {
         gameOverTitle.innerText = "SPIEL ABGEBROCHEN";
@@ -236,6 +277,14 @@ socket.on('lobbyJoined', (data) => {
         endGameBtn.classList.remove('hidden');
     }
 
+    if (data.hasExtensions) {
+        extensionsStatus.innerText = "Aktiviert ✅";
+        extensionsStatus.classList.add('active');
+    } else {
+        extensionsStatus.innerText = "Keine gefunden";
+        extensionsStatus.classList.remove('active');
+    }
+
     lobbyMenu.classList.add('hidden');
     waitingRoom.classList.remove('hidden');
     waitingRoomCode.innerText = roomCode;
@@ -246,8 +295,14 @@ socket.on('lobbyJoined', (data) => {
 
     settingTimer.checked = data.settings.useTimer;
     settingTime.value = data.settings.timeLimit;
+    settingJudging.value = data.settings.judgingTimeLimit;
     settingScore.value = data.settings.scoreLimit;
-    infoTimer.innerText = data.settings.useTimer ? `An (${data.settings.timeLimit}s)` : "Aus";
+
+    if (valTime) valTime.innerText = data.settings.timeLimit + 's';
+    if (valJudging) valJudging.innerText = data.settings.judgingTimeLimit + 's';
+    if (valScore) valScore.innerText = data.settings.scoreLimit + ' Pkt';
+
+    infoTimer.innerText = data.settings.useTimer ? `An (${data.settings.timeLimit}s / ${data.settings.judgingTimeLimit}s)` : "Aus";
     infoScore.innerText = data.settings.scoreLimit;
 
     if(!isSpectator) renderHand(data.player.hand);
@@ -435,7 +490,11 @@ socket.on('allCardsSubmitted', (data) => {
         const cardDiv = document.createElement('div');
         cardDiv.className = 'card white';
         cardDiv.dataset.playerId = submission.playerId;
-        cardDiv.innerHTML = submission.cards.join('<hr>');
+
+        // FIX: Saubere Formatierung für Pick 2 Karten
+        const cardContent = submission.cards.map(text => `<div class="pick-text">${text}</div>`).join('<div class="pick-divider"></div>');
+        cardDiv.innerHTML = cardContent;
+
         cardDiv.style.animation = `dealCard 0.4s forwards`;
         cardDiv.style.animationDelay = `${index * 0.1}s`;
 
@@ -452,7 +511,7 @@ socket.on('allCardsSubmitted', (data) => {
         }
 
         if (!isSpectator && gameMode === 'vote' && submission.playerId === myId) {
-            cardDiv.innerHTML += '<div style="margin-top: 15px; font-size: 0.9rem; color: var(--accent);">(Deine Karte)</div>';
+            cardDiv.innerHTML += '<div class="my-card-label">(Deine Karte)</div>';
         }
 
         submittedAreaEl.appendChild(cardDiv);
